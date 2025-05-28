@@ -5,6 +5,9 @@ from zoneinfo import ZoneInfo  # Python 3.9+
 import os
 from dotenv import load_dotenv
 
+
+load_dotenv()
+
 # Replace this with your bot token
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -17,11 +20,10 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Store reminders we've already sent
 reminded_events = set()
 
-def is_work_hour():
-    now = datetime.datetime.now(ZoneInfo("Europe/London"))
+def is_work_hour(now):
     return (
         0 <= now.weekday() <= 4 and
-        9 <= now.hour < 17
+        now.hour < 17
     )
 
 @bot.event
@@ -34,12 +36,9 @@ async def check_events():
     now = datetime.datetime.now(ZoneInfo("Europe/London"))
 
     # 💣 Kill the bot if after 17:00 UK time
-    if now.hour >= 17:
+    if not is_work_hour(now):
         print("🔴 Workday over. Shutting down bot to save Railway hours.")
         os._exit(0)
-
-    if not is_work_hour():
-        return
 
     for guild in bot.guilds:
         try:
